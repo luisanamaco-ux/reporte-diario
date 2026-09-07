@@ -99,11 +99,14 @@
     width:28px;height:28px;border-radius:50%;font-size:1rem;line-height:1;cursor:pointer;
     display:flex;align-items:center;justify-content:center;touch-action:manipulation;
   }
-  .photo-empty-actions{width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
-  .mini-btn{
-    width:40px;height:40px;border-radius:50%;border:none;background:var(--accent-soft);color:var(--accent);
-    font-size:1.05rem;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;
+  .photo-empty-actions{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+  .camera-btn{
+    width:100%;height:100%;border-radius:8px;border:none;background:var(--accent-soft);color:var(--accent);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    cursor:pointer;touch-action:manipulation;
   }
+  .camera-btn .ic{font-size:1.4rem;line-height:1;}
+  .camera-btn .lb{font-size:.68rem;font-weight:600;}
   .photo-meta .field{margin-bottom:6px;}
   .photo-meta label{font-size:.65rem;margin-bottom:3px;}
   .photo-meta textarea{min-height:44px;padding:7px 8px;font-size:13px;}
@@ -247,9 +250,8 @@
       </div>
     </div>
     <div class="hint" id="photoHint">0 de 4 fotos agregadas</div>
-    <div class="hint">La fecha, hora y coordenadas se registran automáticamente y no se pueden editar.</div>
+    <div class="hint">Solo se puede usar la cámara (no se permite subir imágenes guardadas). La fecha, hora y coordenadas se registran automáticamente y no se pueden editar.</div>
     <input type="file" id="cameraInput" accept="image/*" capture="environment">
-    <input type="file" id="galleryInput" accept="image/*">
   </div>
 
   <div class="card">
@@ -363,7 +365,6 @@
     workToday: document.getElementById("workToday"),
     workTomorrow: document.getElementById("workTomorrow"),
     cameraInput: document.getElementById("cameraInput"),
-    galleryInput: document.getElementById("galleryInput"),
     btnPdf: document.getElementById("btnPdf"),
     btnWhatsapp: document.getElementById("btnWhatsapp"),
     btnNew: document.getElementById("btnNew"),
@@ -474,7 +475,6 @@
   }
 
   function openCamera(idx){ pendingSlot = idx; els.cameraInput.click(); }
-  function openGallery(idx){ pendingSlot = idx; els.galleryInput.click(); }
 
   function readFileAsArrayBuffer(file){
     return new Promise(function(resolve, reject){
@@ -739,13 +739,10 @@
           var wrap = document.createElement("div");
           wrap.className = "photo-empty-actions";
           var camBtn = document.createElement("button");
-          camBtn.type = "button"; camBtn.className = "mini-btn"; camBtn.innerHTML = "📷";
+          camBtn.type = "button"; camBtn.className = "camera-btn";
+          camBtn.innerHTML = '<span class="ic">📷</span><span class="lb">Tomar foto</span>';
           camBtn.addEventListener("click", function(){ openCamera(i); });
-          var galBtn = document.createElement("button");
-          galBtn.type = "button"; galBtn.className = "mini-btn"; galBtn.innerHTML = "🖼️";
-          galBtn.addEventListener("click", function(){ openGallery(i); });
           wrap.appendChild(camBtn);
-          wrap.appendChild(galBtn);
           frame.appendChild(wrap);
           capInput.value = "";
         }
@@ -927,7 +924,6 @@
 
   // ---- Wire up events ----
   els.cameraInput.addEventListener("change", function(e){ handleIncomingFile(e.target.files[0]); e.target.value = ""; });
-  els.galleryInput.addEventListener("change", function(e){ handleIncomingFile(e.target.files[0]); e.target.value = ""; });
 
   [els.workerName, els.reportDate, els.workZone, els.coordWith, els.workYesterday, els.workToday, els.workTomorrow].forEach(function(el){
     el.addEventListener("input", function(){ syncFromInputs(); renderPrint(); saveDraft(); });
