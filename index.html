@@ -106,9 +106,16 @@
   }
   .photo-meta .field{margin-bottom:6px;}
   .photo-meta label{font-size:.65rem;margin-bottom:3px;}
-  .photo-meta input[type=date]{padding:7px 8px;font-size:13px;min-height:36px;}
   .photo-meta textarea{min-height:44px;padding:7px 8px;font-size:13px;}
   .photo-card[data-empty="true"] .photo-meta{display:none;}
+  .auto-tag{
+    display:flex;flex-direction:column;gap:2px;background:var(--accent-soft);border-radius:8px;
+    padding:6px 8px;margin-bottom:8px;font-size:.68rem;color:var(--text);line-height:1.4;
+  }
+  .auto-tag .auto-tag-date{font-weight:700;}
+  .auto-tag .auto-tag-geo{color:var(--muted);}
+  .auto-tag .auto-tag-geo.pending{font-style:italic;}
+  .auto-tag .auto-tag-geo.unavailable{color:var(--danger);}
 
   /* ---- Persistent bottom action bar ---- */
   .bottom-bar{
@@ -150,6 +157,7 @@
     .p-photo-cell img{width:100%;height:100%;object-fit:cover;display:block;}
     .p-photo-cell .p-caption{padding:5px 7px;background:#f7f7f5;}
     .p-photo-cell .p-caption .p-date{font-size:7.5pt;color:#333a45;font-weight:700;text-transform:uppercase;letter-spacing:.02em;}
+    .p-photo-cell .p-caption .p-geo{font-size:7pt;color:#666;margin-top:1px;}
     .p-photo-cell .p-caption .p-desc{font-size:8.5pt;color:#333;margin-top:2px;white-space:pre-wrap;}
     .p-footer{margin-top:16px;font-size:8pt;color:#888;text-align:right;}
     @page{margin:14mm;}
@@ -209,7 +217,7 @@
       <div class="photo-card" data-empty="true" id="photoCard0">
         <div class="photo-frame" id="photoFrame0"></div>
         <div class="photo-meta" id="photoMeta0">
-          <div class="field"><label for="pDate0">Fecha de la toma</label><input type="date" id="pDate0" data-slot="0"></div>
+          <div class="auto-tag" id="pTag0"><span class="auto-tag-date"></span><span class="auto-tag-geo"></span></div>
           <div class="field"><label for="pCaption0">Descripción</label><textarea id="pCaption0" data-slot="0" placeholder="Describe la foto..."></textarea></div>
         </div>
       </div>
@@ -217,7 +225,7 @@
       <div class="photo-card" data-empty="true" id="photoCard1">
         <div class="photo-frame" id="photoFrame1"></div>
         <div class="photo-meta" id="photoMeta1">
-          <div class="field"><label for="pDate1">Fecha de la toma</label><input type="date" id="pDate1" data-slot="1"></div>
+          <div class="auto-tag" id="pTag1"><span class="auto-tag-date"></span><span class="auto-tag-geo"></span></div>
           <div class="field"><label for="pCaption1">Descripción</label><textarea id="pCaption1" data-slot="1" placeholder="Describe la foto..."></textarea></div>
         </div>
       </div>
@@ -225,7 +233,7 @@
       <div class="photo-card" data-empty="true" id="photoCard2">
         <div class="photo-frame" id="photoFrame2"></div>
         <div class="photo-meta" id="photoMeta2">
-          <div class="field"><label for="pDate2">Fecha de la toma</label><input type="date" id="pDate2" data-slot="2"></div>
+          <div class="auto-tag" id="pTag2"><span class="auto-tag-date"></span><span class="auto-tag-geo"></span></div>
           <div class="field"><label for="pCaption2">Descripción</label><textarea id="pCaption2" data-slot="2" placeholder="Describe la foto..."></textarea></div>
         </div>
       </div>
@@ -233,12 +241,13 @@
       <div class="photo-card" data-empty="true" id="photoCard3">
         <div class="photo-frame" id="photoFrame3"></div>
         <div class="photo-meta" id="photoMeta3">
-          <div class="field"><label for="pDate3">Fecha de la toma</label><input type="date" id="pDate3" data-slot="3"></div>
+          <div class="auto-tag" id="pTag3"><span class="auto-tag-date"></span><span class="auto-tag-geo"></span></div>
           <div class="field"><label for="pCaption3">Descripción</label><textarea id="pCaption3" data-slot="3" placeholder="Describe la foto..."></textarea></div>
         </div>
       </div>
     </div>
     <div class="hint" id="photoHint">0 de 4 fotos agregadas</div>
+    <div class="hint">La fecha, hora y coordenadas se registran automáticamente y no se pueden editar.</div>
     <input type="file" id="cameraInput" accept="image/*" capture="environment">
     <input type="file" id="galleryInput" accept="image/*">
   </div>
@@ -324,7 +333,7 @@
 (function(){
   "use strict";
   var MAX_PHOTOS = 4;
-  var STORAGE_KEY = "reporteDiarioDraft_v2";
+  var STORAGE_KEY = "reporteDiarioDraft_v3";
   var pendingSlot = null;
 
   var state = {
@@ -391,7 +400,18 @@
       state.taskEnd = data.taskEnd || "";
       state.taskDays = data.taskDays || "";
       var loadedPhotos = Array.isArray(data.photos) ? data.photos : [];
-      state.photos = [0,1,2,3].map(function(i){ return loadedPhotos[i] || null; });
+      state.photos = [0,1,2,3].map(function(i){
+        var p = loadedPhotos[i];
+        if(!p || !p.dataUrl) return null;
+        return {
+          dataUrl: p.dataUrl,
+          capturedAt: p.capturedAt || null,
+          lat: (typeof p.lat === "number") ? p.lat : null,
+          lon: (typeof p.lon === "number") ? p.lon : null,
+          geoStatus: p.geoStatus || ((typeof p.lat === "number" && typeof p.lon === "number") ? "device" : "unavailable"),
+          caption: p.caption || ""
+        };
+      });
       state.yesterday = data.yesterday || "";
       state.today = data.today || "";
       state.tomorrow = data.tomorrow || "";
@@ -456,17 +476,195 @@
   function openCamera(idx){ pendingSlot = idx; els.cameraInput.click(); }
   function openGallery(idx){ pendingSlot = idx; els.galleryInput.click(); }
 
+  function readFileAsArrayBuffer(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(ev){ resolve(ev.target.result); };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // ---- Lector EXIF mínimo (sin librerías externas) ----
+  // Extrae DateTimeOriginal y coordenadas GPS embebidas por la cámara, si existen.
+  function parseExif(buffer){
+    var view = new DataView(buffer);
+    if(view.byteLength < 4 || view.getUint16(0, false) !== 0xFFD8) return null;
+    var offset = 2;
+    while(offset + 4 <= view.byteLength){
+      if(view.getUint8(offset) !== 0xFF) break;
+      var marker = view.getUint8(offset+1);
+      if(marker === 0xD8 || marker === 0xD9 || (marker >= 0xD0 && marker <= 0xD7)){
+        offset += 2; continue;
+      }
+      if(marker === 0xDA) break; // inicio de datos de imagen: no hay más metadatos
+      var segLength = view.getUint16(offset+2, false);
+      if(marker === 0xE1){
+        var exifStart = offset + 4;
+        if(exifStart + 6 <= view.byteLength &&
+           view.getUint8(exifStart) === 0x45 && view.getUint8(exifStart+1) === 0x78 &&
+           view.getUint8(exifStart+2) === 0x69 && view.getUint8(exifStart+3) === 0x66 &&
+           view.getUint8(exifStart+4) === 0x00 && view.getUint8(exifStart+5) === 0x00){
+          try{ return parseTiff(view, exifStart + 6); }catch(e){ return null; }
+        }
+      }
+      offset += 2 + segLength;
+    }
+    return null;
+  }
+
+  function readValue(view, tiffStart, entryOffset, type, count, little){
+    var typeSizes = {1:1,2:1,3:2,4:4,5:8,7:1,9:4,10:8};
+    var unitSize = typeSizes[type] || 1;
+    var size = unitSize * count;
+    var dataOffset = entryOffset;
+    if(size > 4){
+      var ptr = view.getUint32(entryOffset, little);
+      dataOffset = tiffStart + ptr;
+    }
+    if(dataOffset < 0 || dataOffset + size > view.byteLength) return null;
+    if(type === 2){ // ASCII
+      var str = "";
+      for(var i=0;i<count-1;i++){ str += String.fromCharCode(view.getUint8(dataOffset+i)); }
+      return str;
+    }
+    if(type === 3){ // SHORT
+      if(count === 1) return view.getUint16(dataOffset, little);
+      var arrS=[]; for(var j=0;j<count;j++) arrS.push(view.getUint16(dataOffset+j*2, little));
+      return arrS;
+    }
+    if(type === 4){ // LONG
+      if(count === 1) return view.getUint32(dataOffset, little);
+      var arrL=[]; for(var k=0;k<count;k++) arrL.push(view.getUint32(dataOffset+k*4, little));
+      return arrL;
+    }
+    if(type === 5){ // RATIONAL
+      var arrR=[];
+      for(var r=0;r<count;r++){
+        var num = view.getUint32(dataOffset+r*8, little);
+        var den = view.getUint32(dataOffset+r*8+4, little);
+        arrR.push(den !== 0 ? num/den : 0);
+      }
+      return count === 1 ? arrR[0] : arrR;
+    }
+    return null;
+  }
+
+  function readIFD(view, tiffStart, ifdOffset, little){
+    if(ifdOffset + 2 > view.byteLength) return { tags:{}, next:0 };
+    var numEntries = view.getUint16(ifdOffset, little);
+    var tags = {};
+    for(var i=0;i<numEntries;i++){
+      var entryOffset = ifdOffset + 2 + i*12;
+      if(entryOffset + 12 > view.byteLength) break;
+      var tag = view.getUint16(entryOffset, little);
+      var type = view.getUint16(entryOffset+2, little);
+      var count = view.getUint32(entryOffset+4, little);
+      var value = readValue(view, tiffStart, entryOffset+8, type, count, little);
+      tags[tag] = value;
+    }
+    return { tags: tags };
+  }
+
+  function dmsToDecimal(dms){
+    if(!dms || dms.length < 3) return null;
+    return dms[0] + dms[1]/60 + dms[2]/3600;
+  }
+
+  function parseTiff(view, tiffStart){
+    var byteOrder = view.getUint16(tiffStart, false);
+    var little = byteOrder === 0x4949;
+    var firstIFDOffset = view.getUint32(tiffStart+4, little);
+    var ifd0 = readIFD(view, tiffStart, tiffStart + firstIFDOffset, little);
+    var result = { dateTimeOriginal: null, lat: null, lon: null };
+    if(ifd0.tags[0x8769] != null){
+      var exifIFD = readIFD(view, tiffStart, tiffStart + ifd0.tags[0x8769], little);
+      result.dateTimeOriginal = exifIFD.tags[0x9003] || exifIFD.tags[0x9004] || null;
+    }
+    if(!result.dateTimeOriginal && ifd0.tags[0x0132]) result.dateTimeOriginal = ifd0.tags[0x0132];
+    if(ifd0.tags[0x8825] != null){
+      var gpsIFD = readIFD(view, tiffStart, tiffStart + ifd0.tags[0x8825], little);
+      var latRef = gpsIFD.tags[0x0001];
+      var lat = dmsToDecimal(gpsIFD.tags[0x0002]);
+      var lonRef = gpsIFD.tags[0x0003];
+      var lon = dmsToDecimal(gpsIFD.tags[0x0004]);
+      if(lat != null && lon != null){
+        if(latRef === "S") lat = -lat;
+        if(lonRef === "W") lon = -lon;
+        result.lat = lat;
+        result.lon = lon;
+      }
+    }
+    return result;
+  }
+
+  function exifDateToIso(exifStr){
+    var m = /^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(exifStr || "");
+    if(!m) return null;
+    var d = new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10), parseInt(m[4],10), parseInt(m[5],10), parseInt(m[6],10));
+    if(isNaN(d.getTime())) return null;
+    return d.toISOString();
+  }
+
+  function isoNow(){ return new Date().toISOString(); }
+
+  // ---- Geolocalización del dispositivo (respaldo cuando la foto no trae GPS en el EXIF) ----
+  function getDeviceLocation(){
+    return new Promise(function(resolve){
+      if(!navigator.geolocation){ resolve(null); return; }
+      navigator.geolocation.getCurrentPosition(
+        function(pos){ resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }); },
+        function(){ resolve(null); },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    });
+  }
+
   function handleIncomingFile(file){
     if(pendingSlot === null || !file) return;
     var idx = pendingSlot;
     pendingSlot = null;
     setStatus("Procesando foto...", false);
-    fileToCompressedDataUrl(file).then(function(dataUrl){
-      state.photos[idx] = { dataUrl: dataUrl, dateTaken: todayISO(), caption: "" };
+
+    var compressPromise = fileToCompressedDataUrl(file);
+    var exifPromise = readFileAsArrayBuffer(file)
+      .then(function(buf){ try{ return parseExif(buf); }catch(e){ return null; } })
+      .catch(function(){ return null; });
+
+    Promise.all([compressPromise, exifPromise]).then(function(results){
+      var dataUrl = results[0];
+      var exif = results[1];
+      var capturedAt = (exif && exif.dateTimeOriginal && exifDateToIso(exif.dateTimeOriginal)) || isoNow();
+      var hasExifGeo = !!(exif && typeof exif.lat === "number" && typeof exif.lon === "number");
+
+      state.photos[idx] = {
+        dataUrl: dataUrl,
+        capturedAt: capturedAt,
+        lat: hasExifGeo ? exif.lat : null,
+        lon: hasExifGeo ? exif.lon : null,
+        geoStatus: hasExifGeo ? "exif" : "pending",
+        caption: ""
+      };
       renderPhotos();
       renderPrint();
       saveDraft();
       setStatus("Foto agregada.", false);
+
+      if(!hasExifGeo){
+        getDeviceLocation().then(function(loc){
+          if(!state.photos[idx]) return; // el usuario pudo haber quitado la foto mientras tanto
+          if(loc){
+            state.photos[idx].lat = loc.lat;
+            state.photos[idx].lon = loc.lon;
+            state.photos[idx].geoStatus = "device";
+          } else {
+            state.photos[idx].geoStatus = "unavailable";
+          }
+          renderPhotoTag(idx);
+          renderPrint();
+          saveDraft();
+        });
+      }
     }).catch(function(){
       setStatus("No se pudo procesar la foto.", true);
     });
@@ -483,13 +681,45 @@
     return state.photos.filter(function(p){ return !!p; }).length;
   }
 
+  function formatCoords(lat, lon){
+    if(typeof lat !== "number" || typeof lon !== "number") return null;
+    return lat.toFixed(5) + ", " + lon.toFixed(5);
+  }
+
+  function formatDateTime(iso){
+    if(!iso) return "-";
+    try{
+      var d = new Date(iso);
+      return d.toLocaleString("es-PE", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    }catch(e){ return "-"; }
+  }
+
+  function renderPhotoTag(i){
+    var p = state.photos[i];
+    var tag = document.getElementById("pTag"+i);
+    if(!tag) return;
+    var dateEl = tag.querySelector(".auto-tag-date");
+    var geoEl = tag.querySelector(".auto-tag-geo");
+    if(!p){ dateEl.textContent = ""; geoEl.textContent = ""; geoEl.className = "auto-tag-geo"; return; }
+    dateEl.textContent = "📅 " + formatDateTime(p.capturedAt);
+    if(p.geoStatus === "pending"){
+      geoEl.textContent = "📍 Obteniendo ubicación...";
+      geoEl.className = "auto-tag-geo pending";
+    } else if(p.geoStatus === "exif" || p.geoStatus === "device"){
+      geoEl.textContent = "📍 " + formatCoords(p.lat, p.lon);
+      geoEl.className = "auto-tag-geo";
+    } else {
+      geoEl.textContent = "📍 Ubicación no disponible";
+      geoEl.className = "auto-tag-geo unavailable";
+    }
+  }
+
   function renderPhotos(){
     for(var i=0;i<MAX_PHOTOS;i++){
       (function(i){
         var p = state.photos[i];
         var card = document.getElementById("photoCard"+i);
         var frame = document.getElementById("photoFrame"+i);
-        var dateInput = document.getElementById("pDate"+i);
         var capInput = document.getElementById("pCaption"+i);
         frame.innerHTML = "";
         if(p){
@@ -503,7 +733,6 @@
           rm.innerHTML = "&times;";
           rm.addEventListener("click", function(){ removePhoto(i); });
           frame.appendChild(rm);
-          dateInput.value = p.dateTaken || todayISO();
           capInput.value = p.caption || "";
         } else {
           card.setAttribute("data-empty", "true");
@@ -518,9 +747,9 @@
           wrap.appendChild(camBtn);
           wrap.appendChild(galBtn);
           frame.appendChild(wrap);
-          dateInput.value = "";
           capInput.value = "";
         }
+        renderPhotoTag(i);
       })(i);
     }
     els.photoHint.textContent = countPhotos() + " de " + MAX_PHOTOS + " fotos agregadas";
@@ -587,11 +816,16 @@
         cap.className = "p-caption";
         var dateEl = document.createElement("div");
         dateEl.className = "p-date";
-        dateEl.textContent = formatDateShort(p.dateTaken);
+        dateEl.textContent = formatDateTime(p.capturedAt);
+        var geoEl = document.createElement("div");
+        geoEl.className = "p-geo";
+        var coords = formatCoords(p.lat, p.lon);
+        geoEl.textContent = coords ? ("Coordenadas: " + coords) : "Coordenadas: no disponibles";
         var descEl = document.createElement("div");
         descEl.className = "p-desc";
         descEl.textContent = p.caption || "";
         cap.appendChild(dateEl);
+        cap.appendChild(geoEl);
         cap.appendChild(descEl);
         cell.appendChild(imgWrap);
         cell.appendChild(cap);
@@ -713,11 +947,7 @@
 
   for(var i=0;i<MAX_PHOTOS;i++){
     (function(i){
-      var dateInput = document.getElementById("pDate"+i);
       var capInput = document.getElementById("pCaption"+i);
-      dateInput.addEventListener("input", function(){
-        if(state.photos[i]){ state.photos[i].dateTaken = dateInput.value; renderPrint(); saveDraft(); }
-      });
       capInput.addEventListener("input", function(){
         if(state.photos[i]){ state.photos[i].caption = capInput.value; renderPrint(); saveDraft(); }
       });
