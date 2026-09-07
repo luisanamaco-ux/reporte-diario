@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, viewport-fit=cover">
+<title>Reporte Diario de Trabajo</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Reporte Diario">
+<meta name="theme-color" content="#1d4ed8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d4ed8'/%3E%3Cpath d='M16 44V20a4 4 0 0 1 4-4h20l8 8v20a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4Z' fill='%23fff' opacity='.95'/%3E%3Cpath d='M40 16v8h8' fill='none' stroke='%231d4ed8' stroke-width='2'/%3E%3Cline x1='22' y1='30' x2='42' y2='30' stroke='%231d4ed8' stroke-width='2'/%3E%3Cline x1='22' y1='36' x2='42' y2='36' stroke='%231d4ed8' stroke-width='2'/%3E%3Cline x1='22' y1='42' x2='34' y2='42' stroke='%231d4ed8' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d4ed8'/%3E%3Cpath d='M16 44V20a4 4 0 0 1 4-4h20l8 8v20a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4Z' fill='%23fff' opacity='.95'/%3E%3Cpath d='M40 16v8h8' fill='none' stroke='%231d4ed8' stroke-width='2'/%3E%3Cline x1='22' y1='30' x2='42' y2='30' stroke='%231d4ed8' stroke-width='2'/%3E%3Cline x1='22' y1='36' x2='42' y2='36' stroke='%231d4ed8' stroke-width='2'/%3E%3Cline x1='22' y1='42' x2='34' y2='42' stroke='%231d4ed8' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --text:#1a2233; --muted:#667085; --border:#e2e6ed;
+    --accent:#1d4ed8; --accent-dark:#173fb0; --accent-soft:#e8edfd;
+    --danger:#dc2626; --danger-soft:#fde8e8; --success:#16a34a; --radius:14px;
+    --bar-bg:rgba(255,255,255,.92);
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1420; --card:#171d2c; --text:#e9edf5; --muted:#9aa4b8; --border:#2a3245;
+      --accent:#5c8dff; --accent-dark:#4a76e0; --accent-soft:#1c2740;
+      --danger:#f87171; --danger-soft:#3a1f22; --success:#4ade80;
+      --bar-bg:rgba(17,22,34,.9);
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{background:var(--bg);height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{
+    margin:0;min-height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+    overscroll-behavior-y:contain;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  }
+  button, .btn, a{touch-action:manipulation;}
+  header.top{
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;
+    padding:calc(20px + env(safe-area-inset-top)) 18px 26px;border-radius:0 0 20px 20px;
+  }
+  header.top h1{margin:0;font-size:1.25rem;font-weight:700;}
+  header.top p{margin:4px 0 0;font-size:.85rem;opacity:.9;}
+  main{max-width:640px;margin:0 auto;padding:0 14px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:-14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative;z-index:1;}
+  .card + .card{margin-top:14px;}
+  .card h2{font-size:.95rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .card h2 .num{background:var(--accent-soft);color:var(--accent);width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;}
+  label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
+  input[type=text], input[type=date], textarea{
+    width:100%;border:1px solid var(--border);background:var(--bg);color:var(--text);
+    border-radius:10px;padding:12px;font-size:16px;font-family:inherit;line-height:1.3;
+    -webkit-appearance:none;appearance:none;
+  }
+  textarea{min-height:88px;resize:vertical;line-height:1.4;}
+  input[type=text]:focus, input[type=date]:focus, textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  input[type=date]{min-height:44px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .hint{font-size:.72rem;color:var(--muted);margin-top:5px;}
+  .photo-actions{display:flex;gap:10px;margin-bottom:12px;}
+  .btn{
+    border:none;-webkit-appearance:none;appearance:none;border-radius:10px;padding:12px 14px;
+    font-size:.9rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;
+    justify-content:center;gap:6px;min-height:46px;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-outline{background:var(--accent-soft);color:var(--accent);flex:1;}
+  .btn-primary{background:var(--accent);color:#fff;width:100%;padding:14px;font-size:1rem;}
+  .btn-primary:disabled{opacity:.5;}
+  .btn-success{background:var(--success);color:#fff;width:100%;padding:14px;font-size:1rem;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-danger-ghost{background:var(--danger-soft);color:var(--danger);}
+  .photos-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .photo-slot{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:var(--bg);border:1px dashed var(--border);}
+  .photo-slot img{width:100%;height:100%;object-fit:cover;display:block;-webkit-touch-callout:none;}
+  .photo-slot .remove{
+    position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;border:none;
+    width:32px;height:32px;border-radius:50%;font-size:1.05rem;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;touch-action:manipulation;
+  }
+  .photo-slot.empty{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem;text-align:center;padding:6px;}
+  .actions-stack{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+  .status-msg{font-size:.78rem;text-align:center;margin-top:8px;min-height:16px;color:var(--muted);}
+  .help-box{background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:10px 12px;font-size:.76rem;line-height:1.45;margin-top:10px;}
+  footer.foot{text-align:center;color:var(--muted);font-size:.7rem;padding:18px 20px 4px;}
+  input[type=file]{display:none;}
+
+  /* ---- Persistent bottom action bar (thumb-reach on tall phones) ---- */
+  .bottom-bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:10px;
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    background:var(--bar-bg);backdrop-filter:blur(16px) saturate(1.4);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4);border-top:1px solid var(--border);
+  }
+  .bar-btn{
+    flex:1;border:none;-webkit-appearance:none;appearance:none;border-radius:12px;
+    min-height:52px;font-size:.72rem;font-weight:700;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;background:var(--accent-soft);color:var(--accent);
+  }
+  .bar-btn .ic{font-size:1.3rem;line-height:1;}
+  .bar-btn.accent{background:var(--success);color:#fff;}
+  .bar-btn:active{transform:scale(.96);}
+
+  /* ---- Print / PDF view ---- */
+  #printArea{display:none;}
+  @media print{
+    .bottom-bar{display:none;}
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block;position:absolute;top:0;left:0;width:100%;padding:0;margin:0;color:#000;background:#fff;}
+    .p-header{border-bottom:3px solid #1d4ed8;padding-bottom:10px;margin-bottom:14px;}
+    .p-header h1{font-size:18pt;margin:0 0 4px;color:#1d4ed8;}
+    .p-meta{display:flex;gap:24px;font-size:10.5pt;}
+    .p-meta strong{display:block;font-size:8.5pt;color:#555;text-transform:uppercase;letter-spacing:.03em;}
+    .p-section{margin-bottom:12px;page-break-inside:avoid;}
+    .p-section h3{font-size:11pt;background:#eef2ff;color:#1d4ed8;padding:5px 8px;border-radius:4px;margin:0 0 5px;}
+    .p-section p{font-size:10pt;line-height:1.5;margin:0;white-space:pre-wrap;}
+    .p-photos h3{font-size:11pt;background:#eef2ff;color:#1d4ed8;padding:5px 8px;border-radius:4px;margin:14px 0 8px;}
+    .p-photos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .p-photos-grid div{border:1px solid #ccc;border-radius:4px;overflow:hidden;aspect-ratio:4/3;}
+    .p-photos-grid img{width:100%;height:100%;object-fit:cover;display:block;}
+    .p-footer{margin-top:16px;font-size:8pt;color:#888;text-align:right;}
+    @page{margin:14mm;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>📋 Reporte Diario de Trabajo</h1>
+  <p>Completa, exporta a PDF y comparte por WhatsApp — funciona sin conexión</p>
+</header>
+
+<main id="app">
+
+  <div class="card">
+    <h2><span class="num">1</span> Datos del trabajador</h2>
+    <div class="row2">
+      <div class="field">
+        <label for="workerName">Nombre del trabajador</label>
+        <input type="text" id="workerName" placeholder="Ej. Juan Pérez" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="reportDate">Fecha</label>
+        <input type="date" id="reportDate">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">2</span> Fotos del trabajo <span style="font-weight:400;color:var(--muted);font-size:.75rem;">(máx. 4)</span></h2>
+    <div class="photo-actions">
+      <button type="button" class="btn btn-outline" id="btnCamera">📷 Tomar foto</button>
+      <button type="button" class="btn btn-outline" id="btnGallery">🖼️ Subir foto</button>
+    </div>
+    <div class="photos-grid" id="photosGrid"></div>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment">
+    <input type="file" id="galleryInput" accept="image/*" multiple>
+    <div class="hint" id="photoHint">0 de 4 fotos agregadas</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">3</span> Trabajo del día anterior</h2>
+    <div class="field">
+      <textarea id="workYesterday" placeholder="Describe brevemente lo realizado el día anterior..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">4</span> Trabajo de hoy</h2>
+    <div class="field">
+      <textarea id="workToday" placeholder="Describe el trabajo realizado hoy..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">5</span> Trabajo a realizar mañana</h2>
+    <div class="field">
+      <textarea id="workTomorrow" placeholder="Describe lo planificado para mañana..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">6</span> Exportar y compartir</h2>
+    <div class="help-box">
+      <strong>Cómo obtener el PDF:</strong> al tocar "Exportar PDF" se abre el diálogo de impresión de tu teléfono.
+      En <b>iPhone</b>: elige la vista previa y toca el ícono de compartir para guardarlo o enviarlo directo por WhatsApp.
+      En <b>Android</b>: elige "Guardar como PDF" y luego compártelo desde tus Descargas o Archivos.
+    </div>
+    <div class="actions-stack" style="margin-top:12px;">
+      <button type="button" class="btn btn-ghost" id="btnNew">🗑️ Nuevo reporte (borrar todo)</button>
+    </div>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+</main>
+
+<footer class="foot">Los datos se guardan solo en este teléfono (almacenamiento local). No requiere internet.</footer>
+
+<div class="bottom-bar">
+  <button type="button" class="bar-btn" id="btnPdf"><span class="ic">📄</span>Exportar PDF</button>
+  <button type="button" class="bar-btn accent" id="btnWhatsapp"><span class="ic">💬</span>WhatsApp</button>
+</div>
+
+<!-- Vista de impresión (oculta en pantalla, visible solo al imprimir/exportar PDF) -->
+<div id="printArea">
+  <div class="p-header">
+    <h1>Reporte Diario de Trabajo</h1>
+    <div class="p-meta">
+      <div><strong>Trabajador</strong><span id="pWorker">-</span></div>
+      <div><strong>Fecha</strong><span id="pDate">-</span></div>
+    </div>
+  </div>
+  <div class="p-section">
+    <h3>Trabajo del día anterior</h3>
+    <p id="pYesterday">-</p>
+  </div>
+  <div class="p-section">
+    <h3>Trabajo de hoy</h3>
+    <p id="pToday">-</p>
+  </div>
+  <div class="p-section">
+    <h3>Trabajo a realizar mañana</h3>
+    <p id="pTomorrow">-</p>
+  </div>
+  <div class="p-photos" id="pPhotosWrap">
+    <h3>Fotografías</h3>
+    <div class="p-photos-grid" id="pPhotosGrid"></div>
+  </div>
+  <div class="p-footer">Generado con la app Reporte Diario de Trabajo</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var MAX_PHOTOS = 4;
+  var STORAGE_KEY = "reporteDiarioDraft_v1";
+
+  var state = {
+    worker: "",
+    date: "",
+    photos: [], // {id, dataUrl}
+    yesterday: "",
+    today: "",
+    tomorrow: ""
+  };
+
+  var els = {
+    workerName: document.getElementById("workerName"),
+    reportDate: document.getElementById("reportDate"),
+    photosGrid: document.getElementById("photosGrid"),
+    photoHint: document.getElementById("photoHint"),
+    workYesterday: document.getElementById("workYesterday"),
+    workToday: document.getElementById("workToday"),
+    workTomorrow: document.getElementById("workTomorrow"),
+    cameraInput: document.getElementById("cameraInput"),
+    galleryInput: document.getElementById("galleryInput"),
+    btnCamera: document.getElementById("btnCamera"),
+    btnGallery: document.getElementById("btnGallery"),
+    btnPdf: document.getElementById("btnPdf"),
+    btnWhatsapp: document.getElementById("btnWhatsapp"),
+    btnNew: document.getElementById("btnNew"),
+    statusMsg: document.getElementById("statusMsg")
+  };
+
+  function todayISO(){
+    var d = new Date();
+    var m = String(d.getMonth()+1).padStart(2,"0");
+    var day = String(d.getDate()).padStart(2,"0");
+    return d.getFullYear()+"-"+m+"-"+day;
+  }
+
+  function safeLocalStorageGet(key){
+    try{ return localStorage.getItem(key); }catch(e){ return null; }
+  }
+  function safeLocalStorageSet(key, val){
+    try{ localStorage.setItem(key, val); return true; }catch(e){ return false; }
+  }
+  function safeLocalStorageRemove(key){
+    try{ localStorage.removeItem(key); }catch(e){}
+  }
+
+  function loadDraft(){
+    var raw = safeLocalStorageGet(STORAGE_KEY);
+    if(!raw) return;
+    try{
+      var data = JSON.parse(raw);
+      state.worker = data.worker || "";
+      state.date = data.date || todayISO();
+      state.photos = Array.isArray(data.photos) ? data.photos.slice(0, MAX_PHOTOS) : [];
+      state.yesterday = data.yesterday || "";
+      state.today = data.today || "";
+      state.tomorrow = data.tomorrow || "";
+    }catch(e){ /* ignore corrupt draft */ }
+  }
+
+  var saveTimer = null;
+  function saveDraft(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function(){
+      safeLocalStorageSet(STORAGE_KEY, JSON.stringify(state));
+    }, 250);
+  }
+
+  function setStatus(msg, isError){
+    els.statusMsg.textContent = msg || "";
+    els.statusMsg.style.color = isError ? "var(--danger)" : "var(--muted)";
+    if(msg){
+      setTimeout(function(){
+        if(els.statusMsg.textContent === msg) els.statusMsg.textContent = "";
+      }, 4000);
+    }
+  }
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  // ---- Photo compression (no external libraries) ----
+  function fileToCompressedDataUrl(file, maxDim, quality){
+    maxDim = maxDim || 1280; quality = quality || 0.72;
+    return new Promise(function(resolve, reject){
+      function drawAndResolve(source, width, height){
+        var scale = Math.min(1, maxDim / Math.max(width, height));
+        var w = Math.max(1, Math.round(width*scale));
+        var h = Math.max(1, Math.round(height*scale));
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(source, 0, 0, w, h);
+        try{
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        }catch(err){ reject(err); }
+      }
+      if(window.createImageBitmap){
+        createImageBitmap(file, {imageOrientation: "from-image"}).then(function(bitmap){
+          drawAndResolve(bitmap, bitmap.width, bitmap.height);
+        }).catch(function(){ fallbackViaImage(); });
+      } else {
+        fallbackViaImage();
+      }
+      function fallbackViaImage(){
+        var reader = new FileReader();
+        reader.onload = function(ev){
+          var img = new Image();
+          img.onload = function(){ drawAndResolve(img, img.naturalWidth, img.naturalHeight); };
+          img.onerror = reject;
+          img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  function addFiles(fileList){
+    var files = Array.prototype.slice.call(fileList || []);
+    if(!files.length) return;
+    var remaining = MAX_PHOTOS - state.photos.length;
+    if(remaining <= 0){
+      setStatus("Ya agregaste el máximo de 4 fotos.", true);
+      return;
+    }
+    var toProcess = files.slice(0, remaining);
+    if(files.length > remaining){
+      setStatus("Solo se agregaron " + remaining + " foto(s): el máximo es 4.", true);
+    }
+    setStatus("Procesando foto(s)...", false);
+    Promise.all(toProcess.map(function(f){
+      return fileToCompressedDataUrl(f).then(function(dataUrl){
+        state.photos.push({ id: uid(), dataUrl: dataUrl });
+      }).catch(function(){ /* skip failed image */ });
+    })).then(function(){
+      renderPhotos();
+      renderPrint();
+      saveDraft();
+      setStatus(state.photos.length + " foto(s) agregada(s).", false);
+    });
+  }
+
+  function removePhoto(id){
+    state.photos = state.photos.filter(function(p){ return p.id !== id; });
+    renderPhotos();
+    renderPrint();
+    saveDraft();
+  }
+
+  function renderPhotos(){
+    els.photosGrid.innerHTML = "";
+    state.photos.forEach(function(p){
+      var slot = document.createElement("div");
+      slot.className = "photo-slot";
+      var img = document.createElement("img");
+      img.src = p.dataUrl;
+      var rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "remove";
+      rm.innerHTML = "&times;";
+      rm.addEventListener("click", function(){ removePhoto(p.id); });
+      slot.appendChild(img);
+      slot.appendChild(rm);
+      els.photosGrid.appendChild(slot);
+    });
+    for(var i = state.photos.length; i < MAX_PHOTOS; i++){
+      var empty = document.createElement("div");
+      empty.className = "photo-slot empty";
+      empty.textContent = "Sin foto";
+      els.photosGrid.appendChild(empty);
+    }
+    els.photoHint.textContent = state.photos.length + " de " + MAX_PHOTOS + " fotos agregadas";
+    var atMax = state.photos.length >= MAX_PHOTOS;
+    els.btnCamera.disabled = atMax;
+    els.btnGallery.disabled = atMax;
+    els.btnCamera.style.opacity = atMax ? .5 : 1;
+    els.btnGallery.style.opacity = atMax ? .5 : 1;
+  }
+
+  function formatDateLong(iso){
+    if(!iso) return "-";
+    try{
+      var parts = iso.split("-");
+      var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+      var s = d.toLocaleDateString("es-PE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }catch(e){ return iso; }
+  }
+
+  function renderPrint(){
+    document.getElementById("pWorker").textContent = state.worker || "(sin nombre)";
+    document.getElementById("pDate").textContent = formatDateLong(state.date);
+    document.getElementById("pYesterday").textContent = state.yesterday || "(sin información)";
+    document.getElementById("pToday").textContent = state.today || "(sin información)";
+    document.getElementById("pTomorrow").textContent = state.tomorrow || "(sin información)";
+    var grid = document.getElementById("pPhotosGrid");
+    var wrap = document.getElementById("pPhotosWrap");
+    grid.innerHTML = "";
+    if(state.photos.length === 0){
+      wrap.style.display = "none";
+    } else {
+      wrap.style.display = "block";
+      state.photos.forEach(function(p){
+        var div = document.createElement("div");
+        var img = document.createElement("img");
+        img.src = p.dataUrl;
+        div.appendChild(img);
+        grid.appendChild(div);
+      });
+    }
+  }
+
+  function syncFromInputs(){
+    state.worker = els.workerName.value;
+    state.date = els.reportDate.value;
+    state.yesterday = els.workYesterday.value;
+    state.today = els.workToday.value;
+    state.tomorrow = els.workTomorrow.value;
+  }
+
+  function applyStateToInputs(){
+    els.workerName.value = state.worker;
+    els.reportDate.value = state.date || todayISO();
+    els.workYesterday.value = state.yesterday;
+    els.workToday.value = state.today;
+    els.workTomorrow.value = state.tomorrow;
+  }
+
+  function validate(){
+    if(!els.workerName.value.trim()){
+      setStatus("Ingresa el nombre del trabajador.", true);
+      els.workerName.focus();
+      return false;
+    }
+    if(!els.reportDate.value){
+      setStatus("Selecciona la fecha del reporte.", true);
+      els.reportDate.focus();
+      return false;
+    }
+    return true;
+  }
+
+  function buildSummaryText(){
+    var lines = [];
+    lines.push("Reporte Diario de Trabajo");
+    lines.push("Trabajador: " + (state.worker || "-"));
+    lines.push("Fecha: " + formatDateLong(state.date));
+    lines.push("");
+    lines.push("Trabajo de hoy: " + (state.today || "-"));
+    lines.push("");
+    lines.push("(Adjunta el PDF exportado desde esta app)");
+    return lines.join("\n");
+  }
+
+  function exportPdf(){
+    syncFromInputs();
+    if(!validate()) return;
+    renderPrint();
+    saveDraft();
+    setTimeout(function(){ window.print(); }, 60);
+  }
+
+  function shareWhatsapp(){
+    syncFromInputs();
+    if(!validate()) return;
+    saveDraft();
+    var text = buildSummaryText();
+    var encoded = encodeURIComponent(text);
+
+    if(navigator.share){
+      navigator.share({ title: "Reporte Diario de Trabajo", text: text })
+        .catch(function(){ tryWhatsappLinks(encoded); });
+    } else {
+      tryWhatsappLinks(encoded);
+    }
+  }
+
+  function tryWhatsappLinks(encoded){
+    var start = Date.now();
+    var hidden = false;
+    function onVisChange(){ if(document.visibilityState === "hidden") hidden = true; }
+    document.addEventListener("visibilitychange", onVisChange);
+    window.location.href = "whatsapp://send?text=" + encoded;
+    setTimeout(function(){
+      document.removeEventListener("visibilitychange", onVisChange);
+      if(!hidden){
+        window.open("https://wa.me/?text=" + encoded, "_blank");
+      }
+    }, 1200);
+  }
+
+  function newReport(){
+    if(!window.confirm("¿Borrar todos los datos del reporte actual? Esta acción no se puede deshacer.")) return;
+    state = { worker:"", date: todayISO(), photos: [], yesterday:"", today:"", tomorrow:"" };
+    applyStateToInputs();
+    renderPhotos();
+    renderPrint();
+    safeLocalStorageRemove(STORAGE_KEY);
+    setStatus("Reporte reiniciado.", false);
+  }
+
+  // ---- Wire up events ----
+  els.btnCamera.addEventListener("click", function(){ els.cameraInput.click(); });
+  els.btnGallery.addEventListener("click", function(){ els.galleryInput.click(); });
+  els.cameraInput.addEventListener("change", function(e){ addFiles(e.target.files); e.target.value = ""; });
+  els.galleryInput.addEventListener("change", function(e){ addFiles(e.target.files); e.target.value = ""; });
+
+  [els.workerName, els.reportDate, els.workYesterday, els.workToday, els.workTomorrow].forEach(function(el){
+    el.addEventListener("input", function(){ syncFromInputs(); renderPrint(); saveDraft(); });
+  });
+
+  els.btnPdf.addEventListener("click", exportPdf);
+  els.btnWhatsapp.addEventListener("click", shareWhatsapp);
+  els.btnNew.addEventListener("click", newReport);
+
+  // ---- Init ----
+  loadDraft();
+  if(!state.date) state.date = todayISO();
+  applyStateToInputs();
+  renderPhotos();
+  renderPrint();
+})();
+</script>
+
+</body>
+</html>
