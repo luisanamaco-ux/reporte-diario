@@ -138,12 +138,13 @@
 
   /* ---- Print / PDF view ---- */
   #printArea{display:none;}
-  #printScale{transform-origin:top left;}
+  #printScale{margin:0 auto;}
   @media print{
+    html, body{height:auto;}
     .bottom-bar{display:none;}
     body *{visibility:hidden;}
     #printArea, #printArea *{visibility:visible;}
-    #printArea{display:block;position:absolute;top:0;left:0;width:100%;padding:0;margin:0;color:#000;background:#fff;}
+    #printArea{display:block;position:absolute;top:0;left:0;width:100%;max-height:255mm;padding:0;margin:0;color:#000;background:#fff;overflow:hidden;}
     .p-header{display:flex;align-items:center;gap:10px;border-bottom:2px solid #333a45;padding-bottom:7px;margin-bottom:9px;}
     .p-header img{height:46px;width:auto;flex:none;}
     .p-header h1{font-size:13pt;margin:0;color:#23262b;font-family:Georgia,"Times New Roman",serif;}
@@ -898,8 +899,14 @@
     var scale = document.getElementById("printScale");
     if(!area || !scale) return;
 
-    // Reiniciar cualquier escala previa antes de volver a medir
-    scale.style.transform = "none";
+    // Reiniciar cualquier ajuste previo antes de volver a medir.
+    // OJO: se usa "zoom" (no "transform"). transform:scale() solo cambia
+    // el dibujo visual, pero varios motores de impresión (Chrome/Safari)
+    // siguen paginando según el alto ORIGINAL sin escalar, lo que generaba
+    // contenido diminuto en la esquina y páginas en blanco extra. "zoom"
+    // sí cambia el tamaño real de layout, por lo que la paginación coincide
+    // con lo que se ve.
+    scale.style.zoom = "";
     scale.style.width = "";
 
     var MM_TO_PX = 3.7795275591;
@@ -920,10 +927,10 @@
     var naturalHeight = scale.scrollHeight;
     var s = 1;
     if(naturalHeight > targetHeightPx){
-      s = Math.max(0.55, targetHeightPx / naturalHeight);
+      s = Math.max(0.5, targetHeightPx / naturalHeight);
     }
     scale.style.width = targetWidthPx + "px";
-    scale.style.transform = "scale(" + s + ")";
+    scale.style.zoom = s;
 
     // Limpiar los estilos usados solo para medir, para que la hoja de
     // estilos de impresión (@media print) controle la posición al imprimir.
