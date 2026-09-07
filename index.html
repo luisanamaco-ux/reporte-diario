@@ -140,28 +140,29 @@
   #printArea{display:none;}
   #printScale{margin:0 auto;}
   /* Estas reglas de contenido (p-header, p-meta-grid, etc.) se dejan
-     DELIBERADAMENTE fuera de @media print. #printArea ya está oculto en
-     pantalla (display:none arriba), así que no afectan la vista normal.
-     La razón: el JS necesita mostrar #printArea fuera de pantalla (con un
-     estilo en línea) para medir su alto real ANTES de imprimir y así poder
-     encogerlo a una sola página. Si estas reglas solo existieran dentro de
-     @media print, no se aplicarían durante esa medición (el navegador no
-     está en modo impresión todavía) y el cálculo de encogimiento saldría
-     completamente errado -> por eso el ajuste no funcionaba bien. */
-  .p-header{display:flex;align-items:center;gap:10px;border-bottom:2px solid #333a45;padding-bottom:7px;margin-bottom:9px;}
-  .p-header img{height:46px;width:auto;flex:none;}
+     fuera de @media print a propósito. #printArea ya está oculto en
+     pantalla (display:none arriba), así que no afectan la vista normal. */
+  .p-header{display:flex;align-items:center;gap:10px;border-bottom:2px solid #333a45;padding-bottom:7px;margin-bottom:9px;page-break-inside:avoid;}
+  .p-header img{height:42px;width:auto;flex:none;}
   .p-header h1{font-size:13pt;margin:0;color:#23262b;font-family:Georgia,"Times New Roman",serif;}
-  .p-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;margin-bottom:9px;}
+  .p-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;margin-bottom:9px;page-break-inside:avoid;}
   .p-meta-grid div{border-bottom:1px solid #ddd;padding-bottom:2px;}
   .p-meta-grid strong{display:block;font-size:6.5pt;color:#666;text-transform:uppercase;letter-spacing:.03em;}
   .p-meta-grid span{font-size:8.5pt;}
   .p-section{margin-bottom:7px;page-break-inside:avoid;}
   .p-section h3{font-size:9pt;background:#eef0f2;color:#23262b;padding:3px 6px;border-radius:4px;margin:0 0 3px;}
   .p-section p{font-size:8.5pt;line-height:1.32;margin:0;white-space:pre-wrap;}
+  /* El panel fotográfico completo (título + las 4 fotos) se trata como un
+     único bloque que no se puede partir: si no entra en lo que resta de la
+     página 1, el navegador lo empuja entero a la página 2 en vez de cortar
+     una foto por la mitad. Las fotos además se dejan compactas a propósito
+     para que en la mayoría de los casos (texto corto) las 4 quepan junto
+     con el resto del reporte en una sola página. */
+  .p-photos{page-break-inside:avoid;}
   .p-photos h3{font-size:9pt;background:#eef0f2;color:#23262b;padding:3px 6px;border-radius:4px;margin:9px 0 5px;}
   .p-photos-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
   .p-photo-cell{border:1px solid #ccc;border-radius:4px;overflow:hidden;page-break-inside:avoid;}
-  .p-photo-cell .p-img-wrap{aspect-ratio:4/3;overflow:hidden;}
+  .p-photo-cell .p-img-wrap{aspect-ratio:16/10;overflow:hidden;}
   .p-photo-cell img{width:100%;height:100%;object-fit:cover;display:block;}
   .p-photo-cell .p-caption{padding:3px 6px;background:#f7f7f5;}
   .p-photo-cell .p-caption .p-date{font-size:6.5pt;color:#333a45;font-weight:700;text-transform:uppercase;letter-spacing:.02em;}
@@ -173,14 +174,12 @@
        cada bloque de la app, uno por uno. visibility:hidden NO quita el
        elemento del flujo del documento: seguía ocupando todo su alto normal
        (aunque invisible), y eso era lo que generaba páginas en blanco extra
-       al imprimir, sin importar cuánto se encogiera #printArea. */
-    /* body tiene min-height:100% y padding-bottom (para la barra flotante
-       de la app) que, sin resetear, seguían sumando una página en blanco
-       extra con el color de fondo de la app, aunque no hubiera contenido
-       real. Se resetea todo eso para impresión. */
+       al imprimir. body también tenía min-height:100% y padding-bottom
+       (para la barra flotante) que sumaban una página en blanco de más:
+       se resetean para impresión. */
     html, body{height:auto;min-height:0;margin:0;padding:0;background:#fff;}
     header.top, main#app, footer.foot, .bottom-bar{display:none;}
-    #printArea{display:block;max-height:255mm;padding:0;margin:0;color:#000;background:#fff;overflow:hidden;}
+    #printArea{display:block;padding:0;margin:0;color:#000;background:#fff;}
     @page{margin:12mm;}
   }
 </style>
@@ -910,55 +909,23 @@
   // única página, sin importar cuántas fotos/texto tenga el reporte.
   // Mide la altura real del contenido fuera de pantalla y aplica un
   // transform:scale() proporcional si excede el alto disponible de la hoja.
-  function fitPrintToPage(){
-    var area = document.getElementById("printArea");
-    var scale = document.getElementById("printScale");
-    if(!area || !scale) return;
-
-    // Reiniciar cualquier ajuste previo antes de volver a medir.
-    // OJO: se usa "zoom" (no "transform"). transform:scale() solo cambia
-    // el dibujo visual, pero varios motores de impresión (Chrome/Safari)
-    // siguen paginando según el alto ORIGINAL sin escalar, lo que generaba
-    // contenido diminuto en la esquina y páginas en blanco extra. "zoom"
-    // sí cambia el tamaño real de layout, por lo que la paginación coincide
-    // con lo que se ve.
-    scale.style.zoom = "";
-    scale.style.width = "";
-
-    var MM_TO_PX = 3.7795275591;
-    // Márgenes de seguridad válidos tanto para A4 como para Carta/Letter
-    // (se usa el ancho más angosto y el alto más corto de ambos formatos
-    // para garantizar que quepa sin importar el tamaño de papel elegido).
-    var targetWidthPx = Math.round((210 - 24) * MM_TO_PX);
-    var targetHeightPx = Math.round((279 - 24) * MM_TO_PX);
-
-    var prevCss = area.getAttribute("style") || "";
-    area.style.setProperty("display", "block", "important");
-    area.style.position = "fixed";
-    area.style.left = "-10000px";
-    area.style.top = "0";
-    area.style.visibility = "visible";
-    scale.style.width = targetWidthPx + "px";
-
-    var naturalHeight = scale.scrollHeight;
-    var s = 1;
-    if(naturalHeight > targetHeightPx){
-      s = Math.max(0.5, targetHeightPx / naturalHeight);
-    }
-    scale.style.width = targetWidthPx + "px";
-    scale.style.zoom = s;
-
-    // Limpiar los estilos usados solo para medir, para que la hoja de
-    // estilos de impresión (@media print) controle la posición al imprimir.
-    if(prevCss){ area.setAttribute("style", prevCss); } else { area.removeAttribute("style"); }
-  }
-
   function exportPdf(){
     syncFromInputs();
     if(!validate()) return;
     renderPrint();
-    fitPrintToPage();
     saveDraft();
+    // Nota: se intentó antes forzar todo a una sola página calculando un
+    // factor de escala en JS (transform / zoom) antes de imprimir. Esto
+    // resultó poco confiable entre distintos motores de impresión (Chrome
+    // vs. Safari, escritorio vs. celular): en algunos dispositivos reales
+    // el escalado no se aplicaba a tiempo y una foto terminaba cortada a
+    // la mitad entre dos páginas. Ahora, en vez de eso, el CSS de impresión
+    // (page-break-inside:avoid en .p-section y .p-photos) hace que cada
+    // bloque de texto y el panel de 4 fotos completo se mantengan siempre
+    // enteros: si no entran en la página 1, pasan enteros a la página 2,
+    // pero ninguna foto ni sección se corta nunca a la mitad. Las fotos
+    // además se dejan compactas para que en la mayoría de los reportes
+    // (texto breve) las 4 quepan junto con el resto en una sola página.
     setTimeout(function(){ window.print(); }, 60);
   }
 
